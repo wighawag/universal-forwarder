@@ -4,13 +4,13 @@ pragma solidity 0.7.6;
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/cryptography/ECDSA.sol";
 import "./ERC2771/IERC2771.sol";
-import "./ERC2771/MsgSender.sol";
+import "./ERC2771/UsingMsgSender.sol";
 
 /// @notice Universal Meta Transaction Forwarder
 /// It does not perform any extra logic apart from checing if the caller (metatx forwarder) has been approved via signature.
 /// Note that forwarder approval are forever. This is to remove the need to read storage. Signature need to be given each time.
 /// The overhead (on top of the specific metatx forwarder) is thus just an extra contract load and call + signature check.
-contract NoStorageUniversalForwarder is MsgSender, IERC2771 {
+contract NoStorageUniversalForwarder is UsingMsgSender, IERC2771 {
     using Address for address;
     using ECDSA for bytes32;
 

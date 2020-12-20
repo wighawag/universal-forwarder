@@ -4,11 +4,11 @@ pragma solidity 0.7.6;
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/cryptography/ECDSA.sol";
 import "./ERC2771/IERC2771.sol";
-import "./ERC2771/MsgSender.sol";
+import "./ERC2771/UsingMsgSender.sol";
 
 /// @notice Universal Meta Transaction Forwarder Registry.
 /// Users can record specific forwarder to act on their behalf later.
-contract ForwarderRegistry is MsgSender, IERC2771 {
+contract ForwarderRegistry is UsingMsgSender, IERC2771 {
     using Address for address;
     using ECDSA for bytes32;
 

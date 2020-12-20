@@ -2,9 +2,9 @@
 pragma solidity 0.7.6;
 
 import "./IERC2771.sol";
-import "./MsgSender.sol";
+import "./UsingMsgSender.sol";
 
-abstract contract ERC2771 is MsgSender, IERC2771 {
+abstract contract ERC2771 is UsingMsgSender, IERC2771 {
     address internal immutable _forwarder;
 
     constructor(address forwarder) {
