@@ -3,7 +3,7 @@ pragma solidity 0.7.6;
 
 abstract contract UsingMsgSender {
     // copied from @openzeppelin\contracts\GSN\GSNRecipient.sol
-    function _msgSender() internal pure returns (address payable result) {
+    function _msgSender() internal view virtual returns (address payable result) {
         // We need to read 20 bytes (an address) located at array index msg.data.length - 20. In memory, the array
         // is prefixed with a 32-byte length value, so we first add 32 to get the memory read index. However, doing
         // so would leave the address in the upper 20 bytes of the 32-byte word, which is inconvenient and would

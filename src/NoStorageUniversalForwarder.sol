@@ -6,6 +6,14 @@ import "@openzeppelin/contracts/cryptography/ECDSA.sol";
 import "./ERC2771/IERC2771.sol";
 import "./ERC2771/UsingMsgSender.sol";
 
+interface ERC1271 {
+    function isValidSignature(bytes calldata data, bytes calldata signature) external view returns (bytes4 magicValue);
+}
+
+interface ERC1654 {
+    function isValidSignature(bytes32 hash, bytes calldata signature) external view returns (bytes4 magicValue);
+}
+
 /// @notice Universal Meta Transaction Forwarder
 /// It does not perform any extra logic apart from checing if the caller (metatx forwarder) has been approved via signature.
 /// Note that forwarder approval are forever. This is to remove the need to read storage. Signature need to be given each time.
@@ -13,6 +21,10 @@ import "./ERC2771/UsingMsgSender.sol";
 contract NoStorageUniversalForwarder is UsingMsgSender, IERC2771 {
     using Address for address;
     using ECDSA for bytes32;
+
+    enum SignatureType {DIRECT, EIP1654, EIP1271}
+    bytes4 internal constant ERC1271_MAGICVALUE = 0x20c13b0b;
+    bytes4 internal constant ERC1654_MAGICVALUE = 0x1626ba7e;
 
     bytes32 internal constant EIP712DOMAIN_NAME = keccak256("UniversalForwarder");
     bytes32 internal constant APPROVAL_TYPEHASH = keccak256("ApproveForwarder(address forwarder)");
@@ -35,11 +47,12 @@ contract NoStorageUniversalForwarder is UsingMsgSender, IERC2771 {
     /// @param data the content of the call (the signer address will be appended to it).
     function forward(
         bytes calldata signature,
+        SignatureType signatureType,
         address target,
         bytes calldata data
     ) external payable {
         address signer = _msgSender();
-        require(_isValidSignature(signer, msg.sender, signature), "SIGNATURE_INVALID");
+        require(_isValidSignature(signer, msg.sender, signature, signatureType), "SIGNATURE_INVALID");
         target.functionCallWithValue(abi.encodePacked(data, signer), msg.value);
     }
 
@@ -56,19 +69,31 @@ contract NoStorageUniversalForwarder is UsingMsgSender, IERC2771 {
         return keccak256(abi.encode(EIP712DOMAIN_TYPEHASH, EIP712DOMAIN_NAME, chainId));
     }
 
-    function _encodeMessage(address forwarder) internal view returns (bytes32) {
-        return
-            keccak256(
-                abi.encodePacked("\x19\x01", _DOMAIN_SEPARATOR(), keccak256(abi.encode(APPROVAL_TYPEHASH, forwarder)))
-            );
+    function _encodeMessage(address forwarder) internal view returns (bytes memory) {
+        return abi.encodePacked("\x19\x01", _DOMAIN_SEPARATOR(), keccak256(abi.encode(APPROVAL_TYPEHASH, forwarder)));
     }
 
     function _isValidSignature(
         address signer,
         address forwarder,
-        bytes memory signature
+        bytes memory signature,
+        SignatureType signatureType
     ) internal view returns (bool) {
-        bytes32 digest = _encodeMessage(forwarder);
-        return signer == digest.recover(signature);
+        bytes memory dataToHash = _encodeMessage(forwarder);
+        if (signatureType == SignatureType.EIP1271) {
+            require(
+                ERC1271(signer).isValidSignature(dataToHash, signature) == ERC1271_MAGICVALUE,
+                "SIGNATURE_1271_INVALID"
+            );
+        } else if (signatureType == SignatureType.EIP1654) {
+            require(
+                ERC1654(signer).isValidSignature(keccak256(dataToHash), signature) == ERC1654_MAGICVALUE,
+                "SIGNATURE_1654_INVALID"
+            );
+        } else {
+            address actualSigner = keccak256(dataToHash).recover(signature);
+            require(signer == actualSigner, "SIGNATURE_WRONG_SIGNER");
+        }
+        return signer == keccak256(dataToHash).recover(signature);
     }
 }
