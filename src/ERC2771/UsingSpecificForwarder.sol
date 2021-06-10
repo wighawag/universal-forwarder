@@ -2,9 +2,9 @@
 pragma solidity 0.7.6;
 
 import "./IERC2771.sol";
-import "./UsingMsgSender.sol";
+import "./UsingAppendedCallDataAsSender.sol";
 
-abstract contract UsingSpecificForwarder is UsingMsgSender, IERC2771 {
+abstract contract UsingSpecificForwarder is UsingAppendedCallDataAsSender, IERC2771 {
     address internal immutable _forwarder;
 
     constructor(address forwarder) {
@@ -15,9 +15,9 @@ abstract contract UsingSpecificForwarder is UsingMsgSender, IERC2771 {
         return forwarder == _forwarder;
     }
 
-    function _msgSender() internal view override returns (address payable result) {
+    function _msgSender() internal view returns (address payable result) {
         if (msg.sender == _forwarder) {
-            address payable sender = super._msgSender();
+            address payable sender = _appendedDataAsSender();
             if (sender != address(0)) {
                 return sender;
             }

@@ -4,7 +4,7 @@ pragma solidity 0.7.6;
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/cryptography/ECDSA.sol";
 import "./ERC2771/IERC2771.sol";
-import "./ERC2771/UsingMsgSender.sol";
+import "./ERC2771/UsingAppendedCallDataAsSender.sol";
 
 interface ERC1271 {
     function isValidSignature(bytes calldata data, bytes calldata signature) external view returns (bytes4 magicValue);
@@ -16,7 +16,7 @@ interface ERC1654 {
 
 /// @notice Universal Meta Transaction Forwarder Registry.
 /// Users can record specific forwarder that will be allowed to forward meta transactions on their behalf.
-contract ForwarderRegistry is UsingMsgSender, IERC2771 {
+contract ForwarderRegistry is UsingAppendedCallDataAsSender, IERC2771 {
     using Address for address;
     using ECDSA for bytes32;
 
@@ -59,7 +59,7 @@ contract ForwarderRegistry is UsingMsgSender, IERC2771 {
     /// @param target destination of the call (that will receive the meta transaction).
     /// @param data the content of the call (the signer address will be appended to it).
     function forward(address target, bytes calldata data) external payable {
-        address signer = _msgSender();
+        address signer = _appendedDataAsSender();
         require(_forwarders[signer][msg.sender].approved, "NOT_AUTHORIZED_FORWARDER");
         target.functionCallWithValue(abi.encodePacked(data, signer), msg.value);
     }
@@ -84,7 +84,7 @@ contract ForwarderRegistry is UsingMsgSender, IERC2771 {
         bytes calldata signature,
         SignatureType signatureType
     ) external {
-        _approveForwarder(_msgSender(), approved, signature, signatureType);
+        _approveForwarder(_appendedDataAsSender(), approved, signature, signatureType);
     }
 
     /// @notice approve and forward the meta transaction in one call.
@@ -97,7 +97,7 @@ contract ForwarderRegistry is UsingMsgSender, IERC2771 {
         address target,
         bytes calldata data
     ) external payable {
-        address signer = _msgSender();
+        address signer = _appendedDataAsSender();
         _approveForwarder(signer, true, signature, signatureType);
         target.functionCallWithValue(abi.encodePacked(data, signer), msg.value);
     }
@@ -112,7 +112,7 @@ contract ForwarderRegistry is UsingMsgSender, IERC2771 {
         address target,
         bytes calldata data
     ) external payable {
-        address signer = _msgSender();
+        address signer = _appendedDataAsSender();
         address forwarder = msg.sender;
         require(
             _isValidSignature(

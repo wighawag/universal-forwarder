@@ -1,13 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.7.6;
 
-import "./UsingMsgSender.sol";
+import "./UsingAppendedCallDataAsSender.sol";
 import "./IERC2771.sol";
 import "./IForwarderRegistry.sol";
 
-import "hardhat/console.sol";
-
-abstract contract UsingUniversalForwarding is UsingMsgSender, IERC2771 {
+abstract contract UsingUniversalForwarding is UsingAppendedCallDataAsSender, IERC2771 {
     IForwarderRegistry internal immutable _forwarderRegistry;
     address internal immutable _universalForwarder;
 
@@ -20,9 +18,9 @@ abstract contract UsingUniversalForwarding is UsingMsgSender, IERC2771 {
         return forwarder == _universalForwarder || forwarder == address(_forwarderRegistry);
     }
 
-    function _msgSender() internal view override returns (address payable) {
+    function _msgSender() internal view returns (address payable) {
         address payable msgSender = msg.sender;
-        address payable sender = super._msgSender();
+        address payable sender = _appendedDataAsSender();
         if (msgSender == address(_forwarderRegistry) || msgSender == _universalForwarder) {
             // if forwarder use appended data
             return sender;

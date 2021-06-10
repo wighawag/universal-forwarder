@@ -4,7 +4,7 @@ pragma solidity 0.7.6;
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/cryptography/ECDSA.sol";
 import "./ERC2771/IERC2771.sol";
-import "./ERC2771/UsingMsgSender.sol";
+import "./ERC2771/UsingAppendedCallDataAsSender.sol";
 
 interface ERC1271 {
     function isValidSignature(bytes calldata data, bytes calldata signature) external view returns (bytes4 magicValue);
@@ -18,7 +18,7 @@ interface ERC1654 {
 /// It does not perform any extra logic apart from checing if the caller (metatx forwarder) has been approved via signature.
 /// Note that forwarder approval are forever. This is to remove the need to read storage. Signature need to be given each time.
 /// The overhead (on top of the specific metatx forwarder) is thus just an extra contract load and call + signature check.
-contract NoStorageUniversalForwarder is UsingMsgSender, IERC2771 {
+contract NoStorageUniversalForwarder is UsingAppendedCallDataAsSender, IERC2771 {
     using Address for address;
     using ECDSA for bytes32;
 
@@ -57,7 +57,7 @@ contract NoStorageUniversalForwarder is UsingMsgSender, IERC2771 {
         address target,
         bytes calldata data
     ) external payable {
-        address signer = _msgSender();
+        address signer = _appendedDataAsSender();
         require(_isValidSignature(signer, msg.sender, signature, signatureType), "SIGNATURE_INVALID");
         target.functionCallWithValue(abi.encodePacked(data, signer), msg.value);
     }
