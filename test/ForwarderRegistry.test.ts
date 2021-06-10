@@ -1,36 +1,26 @@
 import {expect} from './chai-setup';
 import {ethers, deployments, getUnnamedAccounts} from 'hardhat';
-import {Contract} from '@ethersproject/contracts';
-
-async function setupUsers<T extends {[contractName: string]: Contract}>(
-  addresses: string[],
-  contracts: T
-): Promise<({address: string} & T)[]> {
-  const users: ({address: string} & T)[] = [];
-  for (const address of addresses) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const user: any = {address};
-    for (const key of Object.keys(contracts)) {
-      user[key] = contracts[key].connect(await ethers.getSigner(address));
-    }
-    users.push(user);
-  }
-  return users;
-}
+import {ForwarderRegistry} from '../typechain';
+import {setupUser, setupUsers} from './utils';
 
 const setup = deployments.createFixture(async () => {
   await deployments.fixture('ForwarderRegistry');
-  const users = await getUnnamedAccounts();
-  const ForwarderRegistry = await ethers.getContract('ForwarderRegistry');
 
   const TestReceiverFactory = await ethers.getContractFactory('TestReceiver');
+  const ForwarderRegistry = <ForwarderRegistry>(
+    await ethers.getContract('ForwarderRegistry')
+  );
   const TestReceiver = await TestReceiverFactory.deploy(
     ForwarderRegistry.address
   );
-
-  return {
+  const contracts = {
     ForwarderRegistry,
-    users: await setupUsers(users, {ForwarderRegistry, TestReceiver}),
+    TestReceiver,
+  };
+  const users = await setupUsers(await getUnnamedAccounts(), contracts);
+  return {
+    ...contracts,
+    users,
   };
 });
 

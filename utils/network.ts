@@ -7,6 +7,11 @@ export function node_url(networkName: string): string {
     }
   }
 
+  if (networkName === 'localhost') {
+    // do not use ETH_NODE_URI
+    return 'http://localhost:8545';
+  }
+
   let uri = process.env.ETH_NODE_URI;
   if (uri) {
     uri = uri.replace('{{networkName}}', networkName);
@@ -17,7 +22,7 @@ export function node_url(networkName: string): string {
   }
   if (uri.indexOf('{{') >= 0) {
     throw new Error(
-      `invalid uri or network not supported by nod eprovider : ${uri}`
+      `invalid uri or network not supported by node provider : ${uri}`
     );
   }
   return uri;

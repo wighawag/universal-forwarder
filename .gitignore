@@ -2,6 +2,7 @@ cache/
 artifacts/
 
 coverage*
+typechain/
 
 .vscode/*
 !.vscode/settings.json.default
@@ -10,6 +11,9 @@ coverage*
 
 node_modules/
 .env
+
+.yalc
+yalc.lock
 
 contractsInfo.json
 deployments/hardhat
