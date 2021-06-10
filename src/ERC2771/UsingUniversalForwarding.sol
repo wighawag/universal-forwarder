@@ -3,28 +3,25 @@ pragma solidity 0.7.6;
 
 import "./UsingMsgSender.sol";
 import "./IERC2771.sol";
-
-interface Registry {
-    function isForwarderFor(address, address) external view returns (bool);
-}
+import "./IForwarderRegistry.sol";
 
 abstract contract UsingUniversalForwarding is UsingMsgSender, IERC2771 {
-    Registry internal immutable _registry;
-    address internal immutable _universal;
+    IForwarderRegistry internal immutable _forwarderRegistry;
+    address internal immutable _universalForwarder;
 
-    constructor(Registry registry, address universal) {
-        _universal = universal;
-        _registry = registry;
+    constructor(IForwarderRegistry forwarderRegistry, address universalForwarder) {
+        _universalForwarder = universalForwarder;
+        _forwarderRegistry = forwarderRegistry;
     }
 
     function isTrustedForwarder(address forwarder) external view override returns (bool) {
-        return forwarder == _universal || forwarder == address(_registry);
+        return forwarder == _universalForwarder || forwarder == address(_forwarderRegistry);
     }
 
     function _msgSender() internal view override returns (address payable) {
         address payable msgSender = msg.sender;
         address payable sender = super._msgSender();
-        if (msgSender == address(_registry) || msgSender == _universal) {
+        if (msgSender == address(_forwarderRegistry) || msgSender == _universalForwarder) {
             // if forwarder use appended data
             return sender;
         }
@@ -35,7 +32,7 @@ abstract contract UsingUniversalForwarding is UsingMsgSender, IERC2771 {
         }
 
         // if appended address non-zero, check if the msg.sender has been registered
-        if (_registry.isForwarderFor(sender, msgSender)) {
+        if (_forwarderRegistry.isForwarderFor(sender, msgSender)) {
             return sender;
         } else {
             return msgSender;

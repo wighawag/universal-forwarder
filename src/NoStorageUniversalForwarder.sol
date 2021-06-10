@@ -30,10 +30,17 @@ contract NoStorageUniversalForwarder is UsingMsgSender, IERC2771 {
     bytes32 internal constant APPROVAL_TYPEHASH = keccak256("ApproveForwarder(address forwarder)");
 
     //solhint-disable-next-line var-name-mixedcase
-    bytes32 internal immutable EIP712DOMAIN_TYPEHASH;
+    uint256 private immutable _deploymentChainId;
+    bytes32 private immutable _deploymentDomainSeparator;
 
     constructor() {
-        EIP712DOMAIN_TYPEHASH = keccak256("EIP712Domain(string name,uint256 chainId,address verifyingContract)");
+        uint256 chainId;
+        //solhint-disable-next-line no-inline-assembly
+        assembly {
+            chainId := chainid()
+        }
+        _deploymentChainId = chainId;
+        _deploymentDomainSeparator = _calculateDomainSeparator(chainId);
     }
 
     /// @notice The UniversalForwarder supports every EIP-2771 compliant forwarder.
@@ -56,17 +63,36 @@ contract NoStorageUniversalForwarder is UsingMsgSender, IERC2771 {
         target.functionCallWithValue(abi.encodePacked(data, signer), msg.value);
     }
 
+    /// @dev Return the DOMAIN_SEPARATOR.
+    function DOMAIN_SEPARATOR() external view returns (bytes32) {
+        return _DOMAIN_SEPARATOR();
+    }
+
     // -------------------------------------------------------- INTERNAL --------------------------------------------------------------------
 
-    /// @notice return the domain separator to compute allowing to check if the signature would be valid.
+    /// @dev Return the DOMAIN_SEPARATOR.
     function _DOMAIN_SEPARATOR() internal view returns (bytes32) {
-        // use dynamic DOMAIN_SEPARATOR to ensure the contract remains valid on all forks.
         uint256 chainId;
         //solhint-disable-next-line no-inline-assembly
         assembly {
             chainId := chainid()
         }
-        return keccak256(abi.encode(EIP712DOMAIN_TYPEHASH, EIP712DOMAIN_NAME, chainId));
+
+        // in case a fork happen, to support the chain that had to change its chainId,, we compue the domain operator
+        return chainId == _deploymentChainId ? _deploymentDomainSeparator : _calculateDomainSeparator(chainId);
+    }
+
+
+    /// @dev Calculate the DOMAIN_SEPARATOR.
+    function _calculateDomainSeparator(uint256 chainId) private view returns (bytes32) {
+        return keccak256(
+            abi.encode(
+                keccak256("EIP712Domain(string name,uint256 chainId,address verifyingContract)"),
+                EIP712DOMAIN_NAME,
+                chainId,
+                address(this)
+            )
+        );
     }
 
     function _encodeMessage(address forwarder) internal view returns (bytes memory) {

@@ -4,7 +4,7 @@ pragma solidity 0.7.6;
 import "./IERC2771.sol";
 import "./UsingMsgSender.sol";
 
-abstract contract ERC2771 is UsingMsgSender, IERC2771 {
+abstract contract UsingSpecificForwarder is UsingMsgSender, IERC2771 {
     address internal immutable _forwarder;
 
     constructor(address forwarder) {
@@ -16,9 +16,11 @@ abstract contract ERC2771 is UsingMsgSender, IERC2771 {
     }
 
     function _msgSender() internal view override returns (address payable result) {
-        address payable sender = super._msgSender();
-        if (sender != address(0)) {
-            return sender;
+        if (msg.sender == _forwarder) {
+            address payable sender = super._msgSender();
+            if (sender != address(0)) {
+                return sender;
+            }
         }
         return msg.sender;
     }
