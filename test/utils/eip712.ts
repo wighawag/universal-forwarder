@@ -22,3 +22,18 @@ export const ForwarderRegistrySignerFactory = new EIP712SignerFactory(
     ],
   }
 );
+
+export const UniversalForwarderSignerFactory = new EIP712SignerFactory(
+  {
+    name: 'UniversalForwarder',
+    chainId: 0,
+  },
+  {
+    ApproveForwarderForever: [
+      {
+        name: 'forwarder',
+        type: 'address',
+      },
+    ],
+  }
+);

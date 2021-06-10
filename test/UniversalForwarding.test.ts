@@ -6,7 +6,10 @@ import {
   TestUniversalForwardingReceiver__factory,
 } from '../typechain';
 import {setupUsers} from './utils';
-import {ForwarderRegistrySignerFactory} from './utils/eip712';
+import {
+  ForwarderRegistrySignerFactory,
+  UniversalForwarderSignerFactory,
+} from './utils/eip712';
 
 const setup = deployments.createFixture(async () => {
   await deployments.fixture(['ForwarderRegistry', 'UniversalForwarder']);
@@ -35,12 +38,19 @@ const setup = deployments.createFixture(async () => {
     verifyingContract: contracts.ForwarderRegistry.address,
   });
 
+  const UniversalForwarderSigner = UniversalForwarderSignerFactory.createSigner(
+    {
+      verifyingContract: UniversalForwarder.address,
+    }
+  );
+
   const users = await setupUsers(await getUnnamedAccounts(), contracts);
 
   return {
     ...contracts,
     users,
     ForwarderRegistrySigner,
+    UniversalForwarderSigner,
   };
 });
 
@@ -60,7 +70,7 @@ describe('UniversalForwarding', function () {
     expect(data).to.equal(42);
   });
 
-  it('TestReceiver with metatx', async function () {
+  it('ForwarderRegistry metatx', async function () {
     const {
       users,
       TestUniversalForwardingReceiver,
@@ -90,6 +100,45 @@ describe('UniversalForwarding', function () {
 
     await users[1].signer.sendTransaction({
       to: ForwarderRegistry.address,
+      data: relayerData + users[0].address.slice(2),
+    });
+
+    const value = await TestUniversalForwardingReceiver.callStatic.getData(
+      users[0].address
+    );
+    expect(value).to.equal(42);
+  });
+
+  it('UniversalForwarder metatx', async function () {
+    const {
+      users,
+      TestUniversalForwardingReceiver,
+      UniversalForwarder,
+      UniversalForwarderSigner,
+    } = await setup();
+    const {to, data} =
+      await users[0].TestUniversalForwardingReceiver.populateTransaction.test(
+        42
+      );
+    if (!(to && data)) {
+      throw new Error(`cannot populate transaction`);
+    }
+    const signature = await UniversalForwarderSigner.sign(users[0], {
+      forwarder: users[1].address,
+      approved: true,
+      nonce: 0,
+    });
+
+    const {data: relayerData} =
+      await users[1].UniversalForwarder.populateTransaction.forward(
+        signature,
+        0,
+        to,
+        data
+      );
+
+    await users[1].signer.sendTransaction({
+      to: UniversalForwarder.address,
       data: relayerData + users[0].address.slice(2),
     });
 

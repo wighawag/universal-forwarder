@@ -27,7 +27,7 @@ contract UniversalForwarder is UsingAppendedCallDataAsSender, IERC2771 {
     bytes4 internal constant ERC1654_MAGICVALUE = 0x1626ba7e;
 
     bytes32 internal constant EIP712DOMAIN_NAME = keccak256("UniversalForwarder");
-    bytes32 internal constant APPROVAL_TYPEHASH = keccak256("ApproveForwarder(address forwarder)");
+    bytes32 internal constant APPROVAL_TYPEHASH = keccak256("ApproveForwarderForever(address forwarder)");
 
     uint256 private immutable _deploymentChainId;
     bytes32 private immutable _deploymentDomainSeparator;
