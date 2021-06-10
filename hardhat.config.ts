@@ -6,6 +6,21 @@ import 'hardhat-gas-reporter';
 import '@typechain/hardhat';
 import 'solidity-coverage';
 import {node_url, accounts} from './utils/network';
+import {subtask} from 'hardhat/config';
+import {TASK_COMPILE_SOLIDITY_COMPILE_JOBS} from 'hardhat/builtin-tasks/task-names';
+import fs from 'fs';
+import path from 'path';
+
+// necessary as newest version of typechain assume specific hardhat-ethers type which are not compatible with hardhat-deploy-ethers
+subtask(TASK_COMPILE_SOLIDITY_COMPILE_JOBS, undefined).setAction(
+  async (args, hre, runSuper) => {
+    const result = await runSuper(args);
+    try {
+      fs.unlinkSync(path.join(hre.config.typechain.outDir, 'hardhat.d.ts'));
+    } catch (e) {}
+    return result;
+  }
+);
 
 const config: HardhatUserConfig = {
   solidity: {
