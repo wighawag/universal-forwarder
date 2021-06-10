@@ -22,10 +22,11 @@ const setup = deployments.createFixture(async () => {
   const TestUniversalForwardingReceiverFactory = <
     TestUniversalForwardingReceiver__factory
   >await ethers.getContractFactory('TestUniversalForwardingReceiver');
-  const TestUniversalForwardingReceiver = await TestUniversalForwardingReceiverFactory.deploy(
-    ForwarderRegistry.address,
-    NoStorageUniversalForwarder.address
-  );
+  const TestUniversalForwardingReceiver =
+    await TestUniversalForwardingReceiverFactory.deploy(
+      ForwarderRegistry.address,
+      NoStorageUniversalForwarder.address
+    );
   const contracts = {
     NoStorageUniversalForwarder,
     ForwarderRegistry,
