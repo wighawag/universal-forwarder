@@ -25,9 +25,8 @@ contract ForwarderRegistry is UsingMsgSender, IERC2771 {
     bytes4 internal constant ERC1654_MAGICVALUE = 0x1626ba7e;
 
     bytes32 internal constant EIP712DOMAIN_NAME = keccak256("ForwarderRegistry");
-    bytes32 internal constant APPROVAL_TYPEHASH = keccak256(
-        "ApproveForwarder(address forwarder,bool approved,uint256 nonce)"
-    );
+    bytes32 internal constant APPROVAL_TYPEHASH =
+        keccak256("ApproveForwarder(address forwarder,bool approved,uint256 nonce)");
 
     uint256 private immutable _deploymentChainId;
     bytes32 private immutable _deploymentDomainSeparator;

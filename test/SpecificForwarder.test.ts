@@ -15,9 +15,10 @@ const setup = deployments.createFixture(async () => {
   const TestSpecificForwarderReceiverFactory = <
     TestSpecificForwarderReceiver__factory
   >await ethers.getContractFactory('TestSpecificForwarderReceiver');
-  const TestSpecificForwarderReceiver = await TestSpecificForwarderReceiverFactory.deploy(
-    ForwarderRegistry.address
-  );
+  const TestSpecificForwarderReceiver =
+    await TestSpecificForwarderReceiverFactory.deploy(
+      ForwarderRegistry.address
+    );
 
   const contracts = {
     ForwarderRegistry,
