@@ -15,7 +15,7 @@ interface ERC1654 {
 }
 
 /// @notice Universal Meta Transaction Forwarder Registry.
-/// Users can record specific forwarder to act on their behalf later.
+/// Users can record specific forwarder that will be allowed to forward meta transactions on their behalf.
 contract ForwarderRegistry is UsingMsgSender, IERC2771 {
     using Address for address;
     using ECDSA for bytes32;
