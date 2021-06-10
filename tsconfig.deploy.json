@@ -1,0 +1,7 @@
+{
+  "extends": "./tsconfig.json",
+  "include": ["hardhat.config.ts", "./deploy"],
+  "compilerOptions": {
+    "outDir": "export"
+  }
+}

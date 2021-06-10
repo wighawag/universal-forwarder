@@ -4,6 +4,8 @@ artifacts/
 coverage*
 typechain/
 
+_lib
+
 .vscode/*
 !.vscode/settings.json.default
 !.vscode/launch.json.default
@@ -18,3 +20,11 @@ yalc.lock
 contractsInfo.json
 deployments/hardhat
 deployments/localhost
+
+export/*
+!export/artifacts
+!export/deploy
+export/deploy/*
+!export/deploy/001_deploy_forwarder_registry.js
+!export/deploy/002_deploy_universal_forwarder.js
+

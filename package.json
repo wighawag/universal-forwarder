@@ -1,11 +1,11 @@
 {
-  "name": "template-ethereum-contracts",
+  "name": "ethereum-universal-forwarder",
   "version": "0.1.0",
-  "description": "Template to develop ethereum smart contracts",
+  "description": "Universale Forwarder for Meta Transactions",
   "engines": {
     "node": ">= 12.18.0"
   },
-  "repository": "github:wighawag/template-ethereum-contracts",
+  "repository": "github:wighawag/universal-forwarder",
   "author": "wighawag",
   "license": "MIT",
   "keywords": [
@@ -15,6 +15,16 @@
     "boilerplate",
     "hardhat",
     "solidity"
+  ],
+  "files": [
+    "_lib",
+    "src/solc_0.7/",
+    "LICENSE",
+    "README.md",
+    "export/artifacts/",
+    "export/deploy/001_deploy_forwarder_registry.js",
+    "export/deploy/002_deploy_universal_forwarder.js",
+    "diagram_*"
   ],
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "npm:hardhat-deploy-ethers@0.3.0-beta.10",
@@ -55,6 +65,7 @@
     "format": "prettier --check \"**/*.{ts,js,sol}\"",
     "format:fix": "prettier --write \"**/*.{ts,js,sol}\"",
     "compile": "hardhat compile",
+    "export-artifacts": "tsc -p tsconfig.deploy.json && hardhat export-artifacts export/artifacts --include ForwarderRegistry,UniversalForwarder",
     "void:deploy": "hardhat deploy",
     "test": "cross-env HARDHAT_DEPLOY_FIXTURE=true HARDHAT_COMPILE=true mocha --bail --recursive test",
     "gas": "cross-env REPORT_GAS=true hardhat test",

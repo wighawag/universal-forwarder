@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.7.6;
 
-import "../ERC2771/UsingSpecificForwarder.sol";
+import "../solc_0.7/ERC2771/UsingSpecificForwarder.sol";
 
 contract TestSpecificForwarderReceiver is UsingSpecificForwarder {
     mapping(address => uint256) internal _d;

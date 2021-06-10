@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.7.6;
 
-import "@openzeppelin/contracts/utils/Address.sol";
-import "@openzeppelin/contracts/cryptography/ECDSA.sol";
-import "./ERC2771/IERC2771.sol";
-import "./ERC2771/UsingAppendedCallDataAsSender.sol";
+import "../_lib/openzeppelin/contracts/utils/Address.sol";
+import "../_lib/openzeppelin/contracts/cryptography/ECDSA.sol";
+import "./solc_0.7/ERC2771/IERC2771.sol";
+import "./solc_0.7/ERC2771/UsingAppendedCallDataAsSender.sol";
 
 interface ERC1271 {
     function isValidSignature(bytes calldata data, bytes calldata signature) external view returns (bytes4 magicValue);
