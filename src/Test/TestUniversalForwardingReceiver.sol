@@ -1,15 +1,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.7.6;
 
-import "../ERC2771/UsingSpecificForwarder.sol";
+import "../ERC2771/UsingUniversalForwarding.sol";
 
-contract TestReceiver is UsingSpecificForwarder {
+contract TestUniversalForwardingReceiver is UsingUniversalForwarding {
     mapping(address => uint256) internal _d;
 
     event Test(address from, string name);
 
     // solhint-disable-next-line no-empty-blocks
-    constructor(address forwarder) UsingSpecificForwarder(forwarder) {}
+    constructor(IForwarderRegistry forwarderRegistry, address universalForwarder)
+        UsingUniversalForwarding(forwarderRegistry, universalForwarder)
+    {}
 
     function doSomething(address from, string calldata name) external payable {
         require(_msgSender() == from, "NOT_AUTHORIZED");
