@@ -33,10 +33,6 @@ const setup = deployments.createFixture(async () => {
 
 describe('SpecificForwarder', function () {
   it('isTrustedForwarder', async function () {
-    const signer = await ethers.getSignerOrNull(
-      '0x0000000000000000000000000000000000000001'
-    );
-    console.log({signer});
     const {TestSpecificForwarderReceiver, ForwarderRegistry} = await setup();
     expect(
       await TestSpecificForwarderReceiver.isTrustedForwarder(

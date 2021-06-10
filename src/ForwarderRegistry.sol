@@ -6,19 +6,31 @@ import "@openzeppelin/contracts/cryptography/ECDSA.sol";
 import "./ERC2771/IERC2771.sol";
 import "./ERC2771/UsingMsgSender.sol";
 
+interface ERC1271 {
+    function isValidSignature(bytes calldata data, bytes calldata signature) external view returns (bytes4 magicValue);
+}
+
+interface ERC1654 {
+    function isValidSignature(bytes32 hash, bytes calldata signature) external view returns (bytes4 magicValue);
+}
+
 /// @notice Universal Meta Transaction Forwarder Registry.
 /// Users can record specific forwarder to act on their behalf later.
 contract ForwarderRegistry is UsingMsgSender, IERC2771 {
     using Address for address;
     using ECDSA for bytes32;
 
+    enum SignatureType {DIRECT, EIP1654, EIP1271}
+    bytes4 internal constant ERC1271_MAGICVALUE = 0x20c13b0b;
+    bytes4 internal constant ERC1654_MAGICVALUE = 0x1626ba7e;
+
     bytes32 internal constant EIP712DOMAIN_NAME = keccak256("ForwarderRegistry");
     bytes32 internal constant APPROVAL_TYPEHASH = keccak256(
         "ApproveForwarder(address forwarder,bool approved,uint256 nonce)"
     );
 
-    //solhint-disable-next-line var-name-mixedcase
-    bytes32 internal immutable EIP712DOMAIN_TYPEHASH;
+    uint256 private immutable _deploymentChainId;
+    bytes32 private immutable _deploymentDomainSeparator;
 
     struct Forwarder {
         uint248 nonce;
@@ -30,7 +42,13 @@ contract ForwarderRegistry is UsingMsgSender, IERC2771 {
     event ForwarderApproved(address indexed signer, address indexed forwarder, bool approved, uint256 nonce);
 
     constructor() {
-        EIP712DOMAIN_TYPEHASH = keccak256("EIP712Domain(string name,uint256 chainId,address verifyingContract)");
+        uint256 chainId;
+        //solhint-disable-next-line no-inline-assembly
+        assembly {
+            chainId := chainid()
+        }
+        _deploymentChainId = chainId;
+        _deploymentDomainSeparator = _calculateDomainSeparator(chainId);
     }
 
     /// @notice The ForwarderRegistry supports every EIP-2771 compliant forwarder.
@@ -62,8 +80,12 @@ contract ForwarderRegistry is UsingMsgSender, IERC2771 {
     /// @notice approve forwarder using the forwarder (which is msg.sender).
     /// @param approved whether to approve or disapprove (if previously approved) the forwarder.
     /// @param signature signature by signer for approving forwarder.
-    function approveForwarder(bool approved, bytes calldata signature) external {
-        _approveForwarder(_msgSender(), approved, signature);
+    function approveForwarder(
+        bool approved,
+        bytes calldata signature,
+        SignatureType signatureType
+    ) external {
+        _approveForwarder(_msgSender(), approved, signature, signatureType);
     }
 
     /// @notice approve and forward the meta transaction in one call.
@@ -72,11 +94,12 @@ contract ForwarderRegistry is UsingMsgSender, IERC2771 {
     /// @param data the content of the call (the signer address will be appended to it).
     function approveAndForward(
         bytes calldata signature,
+        SignatureType signatureType,
         address target,
         bytes calldata data
     ) external payable {
         address signer = _msgSender();
-        _approveForwarder(signer, true, signature);
+        _approveForwarder(signer, true, signature, signatureType);
         target.functionCallWithValue(abi.encodePacked(data, signer), msg.value);
     }
 
@@ -86,43 +109,68 @@ contract ForwarderRegistry is UsingMsgSender, IERC2771 {
     /// @param data the content of the call (the signer address will be appended to it).
     function checkApprovalAndForward(
         bytes calldata signature,
+        SignatureType signatureType,
         address target,
         bytes calldata data
     ) external payable {
         address signer = _msgSender();
         address forwarder = msg.sender;
         require(
-            _isValidSignature(signer, forwarder, true, uint256(_forwarders[signer][forwarder].nonce), signature),
+            _isValidSignature(
+                signer,
+                forwarder,
+                true,
+                uint256(_forwarders[signer][forwarder].nonce),
+                signature,
+                signatureType
+            ),
             "SIGNATURE_INVALID"
         );
         target.functionCallWithValue(abi.encodePacked(data, signer), msg.value);
     }
 
+    /// @dev Return the DOMAIN_SEPARATOR.
+    function DOMAIN_SEPARATOR() external view returns (bytes32) {
+        return _DOMAIN_SEPARATOR();
+    }
+
     // -------------------------------------------------------- INTERNAL --------------------------------------------------------------------
 
-    /// @notice return the domain separator to compute allowing to check if the signature would be valid.
+    /// @dev Return the DOMAIN_SEPARATOR.
     function _DOMAIN_SEPARATOR() internal view returns (bytes32) {
-        // use dynamic DOMAIN_SEPARATOR to ensure the contract remains valid on all forks.
         uint256 chainId;
         //solhint-disable-next-line no-inline-assembly
         assembly {
             chainId := chainid()
         }
-        return keccak256(abi.encode(EIP712DOMAIN_TYPEHASH, EIP712DOMAIN_NAME, chainId));
+
+        // in case a fork happen, to support the chain that had to change its chainId,, we compue the domain operator
+        return chainId == _deploymentChainId ? _deploymentDomainSeparator : _calculateDomainSeparator(chainId);
+    }
+
+    /// @dev Calculate the DOMAIN_SEPARATOR.
+    function _calculateDomainSeparator(uint256 chainId) private view returns (bytes32) {
+        return
+            keccak256(
+                abi.encode(
+                    keccak256("EIP712Domain(string name,uint256 chainId,address verifyingContract)"),
+                    EIP712DOMAIN_NAME,
+                    chainId,
+                    address(this)
+                )
+            );
     }
 
     function _encodeMessage(
         address forwarder,
         bool approved,
         uint256 nonce
-    ) internal view returns (bytes32) {
+    ) internal view returns (bytes memory) {
         return
-            keccak256(
-                abi.encodePacked(
-                    "\x19\x01",
-                    _DOMAIN_SEPARATOR(),
-                    keccak256(abi.encode(APPROVAL_TYPEHASH, forwarder, approved, nonce))
-                )
+            abi.encodePacked(
+                "\x19\x01",
+                _DOMAIN_SEPARATOR(),
+                keccak256(abi.encode(APPROVAL_TYPEHASH, forwarder, approved, nonce))
             );
     }
 
@@ -131,22 +179,38 @@ contract ForwarderRegistry is UsingMsgSender, IERC2771 {
         address forwarder,
         bool approved,
         uint256 nonce,
-        bytes memory signature
+        bytes memory signature,
+        SignatureType signatureType
     ) internal view returns (bool) {
-        bytes32 digest = _encodeMessage(forwarder, approved, nonce);
-        return signer == digest.recover(signature);
+        bytes memory dataToHash = _encodeMessage(forwarder, approved, nonce);
+        if (signatureType == SignatureType.EIP1271) {
+            require(
+                ERC1271(signer).isValidSignature(dataToHash, signature) == ERC1271_MAGICVALUE,
+                "SIGNATURE_1271_INVALID"
+            );
+        } else if (signatureType == SignatureType.EIP1654) {
+            require(
+                ERC1654(signer).isValidSignature(keccak256(dataToHash), signature) == ERC1654_MAGICVALUE,
+                "SIGNATURE_1654_INVALID"
+            );
+        } else {
+            address actualSigner = keccak256(dataToHash).recover(signature);
+            require(signer == actualSigner, "SIGNATURE_WRONG_SIGNER");
+        }
+        return signer == keccak256(dataToHash).recover(signature);
     }
 
     function _approveForwarder(
         address signer,
         bool approved,
-        bytes memory signature
+        bytes memory signature,
+        SignatureType signatureType
     ) internal {
         address forwarder = msg.sender;
         Forwarder storage forwarderData = _forwarders[signer][forwarder];
         uint256 nonce = uint256(forwarderData.nonce);
 
-        require(_isValidSignature(signer, forwarder, approved, nonce, signature), "SIGNATURE_INVALID");
+        require(_isValidSignature(signer, forwarder, approved, nonce, signature, signatureType), "SIGNATURE_INVALID");
 
         forwarderData.approved = approved;
         forwarderData.nonce = uint248(nonce + 1);

@@ -29,7 +29,6 @@ contract NoStorageUniversalForwarder is UsingMsgSender, IERC2771 {
     bytes32 internal constant EIP712DOMAIN_NAME = keccak256("UniversalForwarder");
     bytes32 internal constant APPROVAL_TYPEHASH = keccak256("ApproveForwarder(address forwarder)");
 
-    //solhint-disable-next-line var-name-mixedcase
     uint256 private immutable _deploymentChainId;
     bytes32 private immutable _deploymentDomainSeparator;
 
@@ -82,17 +81,17 @@ contract NoStorageUniversalForwarder is UsingMsgSender, IERC2771 {
         return chainId == _deploymentChainId ? _deploymentDomainSeparator : _calculateDomainSeparator(chainId);
     }
 
-
     /// @dev Calculate the DOMAIN_SEPARATOR.
     function _calculateDomainSeparator(uint256 chainId) private view returns (bytes32) {
-        return keccak256(
-            abi.encode(
-                keccak256("EIP712Domain(string name,uint256 chainId,address verifyingContract)"),
-                EIP712DOMAIN_NAME,
-                chainId,
-                address(this)
-            )
-        );
+        return
+            keccak256(
+                abi.encode(
+                    keccak256("EIP712Domain(string name,uint256 chainId,address verifyingContract)"),
+                    EIP712DOMAIN_NAME,
+                    chainId,
+                    address(this)
+                )
+            );
     }
 
     function _encodeMessage(address forwarder) internal view returns (bytes memory) {
