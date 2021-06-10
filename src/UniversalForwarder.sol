@@ -15,7 +15,7 @@ interface ERC1654 {
 }
 
 /// @notice Universal Meta Transaction Forwarder
-/// It does not perform any extra logic apart from checing if the caller (metatx forwarder) has been approved via signature.
+/// It does not perform any extra logic apart from checking if the caller (metatx forwarder) has been approved via signature.
 /// Note that forwarder approval are forever. This is to remove the need to read storage. Signature need to be given each time.
 /// The overhead (on top of the specific metatx forwarder) is thus just an extra contract load and call + signature check.
 contract UniversalForwarder is UsingAppendedCallDataAsSender, IERC2771 {
