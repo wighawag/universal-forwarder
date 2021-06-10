@@ -5,6 +5,8 @@ import "./UsingMsgSender.sol";
 import "./IERC2771.sol";
 import "./IForwarderRegistry.sol";
 
+import "hardhat/console.sol";
+
 abstract contract UsingUniversalForwarding is UsingMsgSender, IERC2771 {
     IForwarderRegistry internal immutable _forwarderRegistry;
     address internal immutable _universalForwarder;
@@ -26,13 +28,12 @@ abstract contract UsingUniversalForwarding is UsingMsgSender, IERC2771 {
             return sender;
         }
 
-        if (sender == address(0)) {
-            // no appended data => use msg.sender
-            return msgSender;
-        }
-
-        // if appended address non-zero, check if the msg.sender has been registered
-        if (_forwarderRegistry.isForwarderFor(sender, msgSender)) {
+        // if msg.sender is neither the registry nor the universal forwarder,
+        // we have to check the last 20bytes of the call data intepreted as an address
+        // and check if the msg.sender was registered as forewarder for that address
+        // we check tx.origin to save gas in case where msg.sender == tx.origin
+        // solhint-disable-next-line avoid-tx-origin
+        if (msgSender != tx.origin && _forwarderRegistry.isForwarderFor(sender, msgSender)) {
             return sender;
         } else {
             return msgSender;

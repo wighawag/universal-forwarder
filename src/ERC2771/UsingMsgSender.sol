@@ -2,26 +2,12 @@
 pragma solidity 0.7.6;
 
 abstract contract UsingMsgSender {
-    // copied from @openzeppelin\contracts\GSN\GSNRecipient.sol
-    function _msgSender() internal view virtual returns (address payable result) {
-        // We need to read 20 bytes (an address) located at array index msg.data.length - 20. In memory, the array
-        // is prefixed with a 32-byte length value, so we first add 32 to get the memory read index. However, doing
-        // so would leave the address in the upper 20 bytes of the 32-byte word, which is inconvenient and would
-        // require bit shifting. We therefore subtract 12 from the read index so the address lands on the lower 20
-        // bytes. This can always be done due to the 32-byte prefix.
-
-        // The final memory read index is msg.data.length - 20 + 32 - 12 = msg.data.length. Using inline assembly is the
-        // easiest/most-efficient way to perform this operation.
-
-        // These fields are not accessible from assembly
-        bytes memory array = msg.data;
-        uint256 index = msg.data.length;
-
+    function _msgSender() internal view virtual returns (address payable sender) {
+        // Copied from openzeppelin : https://github.com/OpenZeppelin/openzeppelin-contracts/blob/9d5f77db9da0604ce0b25148898a94ae2c20d70f/contracts/metatx/ERC2771Context.sol1
+        // The assembly code is more direct than the Solidity version using `abi.decode`.
         // solhint-disable-next-line no-inline-assembly
         assembly {
-            // Load the 32 bytes word from memory with the address on the lower 20 bytes, and mask those.
-            result := and(mload(add(array, index)), 0xffffffffffffffffffffffffffffffffffffffff)
+            sender := shr(96, calldataload(sub(calldatasize(), 20)))
         }
-        return result;
     }
 }
