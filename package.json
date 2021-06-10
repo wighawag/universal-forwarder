@@ -17,7 +17,7 @@
     "solidity"
   ],
   "devDependencies": {
-    "@nomiclabs/hardhat-ethers": "npm:hardhat-deploy-ethers",
+    "@nomiclabs/hardhat-ethers": "npm:hardhat-deploy-ethers@0.3.0-beta.10",
     "@openzeppelin/contracts": "^3.4.1",
     "@typechain/ethers-v5": "^7.0.0",
     "@typechain/hardhat": "^2.0.1",
@@ -32,7 +32,7 @@
     "dotenv": "^9.0.2",
     "eslint": "^7.26.0",
     "eslint-config-prettier": "^8.3.0",
-    "ethers": "^5.1.4",
+    "ethers": "^5.3.0",
     "fs-extra": "^10.0.0",
     "hardhat": "^2.3.0",
     "hardhat-deploy": "^0.7.7",
