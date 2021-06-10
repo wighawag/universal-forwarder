@@ -6,8 +6,6 @@ import "@openzeppelin/contracts/cryptography/ECDSA.sol";
 import "./ERC2771/IERC2771.sol";
 import "./ERC2771/UsingMsgSender.sol";
 
-import "hardhat/console.sol";
-
 interface ERC1271 {
     function isValidSignature(bytes calldata data, bytes calldata signature) external view returns (bytes4 magicValue);
 }
@@ -144,8 +142,6 @@ contract ForwarderRegistry is UsingMsgSender, IERC2771 {
         assembly {
             chainId := chainid()
         }
-
-        console.log(chainId);
 
         // in case a fork happen, to support the chain that had to change its chainId,, we compue the domain operator
         return chainId == _deploymentChainId ? _deploymentDomainSeparator : _calculateDomainSeparator(chainId);

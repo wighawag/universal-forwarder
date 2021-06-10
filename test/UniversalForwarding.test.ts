@@ -6,6 +6,7 @@ import {
   TestUniversalForwardingReceiver__factory,
 } from '../typechain';
 import {setupUsers} from './utils';
+import {ForwarderRegistrySignerFactory} from './utils/eip712';
 
 const setup = deployments.createFixture(async () => {
   await deployments.fixture([
@@ -32,11 +33,17 @@ const setup = deployments.createFixture(async () => {
     ForwarderRegistry,
     TestUniversalForwardingReceiver,
   };
+
+  const ForwarderRegistrySigner = ForwarderRegistrySignerFactory.createSigner({
+    verifyingContract: contracts.ForwarderRegistry.address,
+  });
+
   const users = await setupUsers(await getUnnamedAccounts(), contracts);
 
   return {
     ...contracts,
     users,
+    ForwarderRegistrySigner,
   };
 });
 
@@ -54,5 +61,44 @@ describe('UniversalForwarding', function () {
       users[0].address
     );
     expect(data).to.equal(42);
+  });
+
+  it('TestReceiver with metatx', async function () {
+    const {
+      users,
+      TestUniversalForwardingReceiver,
+      ForwarderRegistry,
+      ForwarderRegistrySigner,
+    } = await setup();
+    const {to, data} =
+      await users[0].TestUniversalForwardingReceiver.populateTransaction.test(
+        42
+      );
+    if (!(to && data)) {
+      throw new Error(`cannot populate transaction`);
+    }
+    const signature = await ForwarderRegistrySigner.sign(users[0], {
+      forwarder: users[1].address,
+      approved: true,
+      nonce: 0,
+    });
+
+    const {data: relayerData} =
+      await users[1].ForwarderRegistry.populateTransaction.checkApprovalAndForward(
+        signature,
+        0,
+        to,
+        data
+      );
+
+    await users[1].signer.sendTransaction({
+      to: ForwarderRegistry.address,
+      data: relayerData + users[0].address.slice(2),
+    });
+
+    const value = await TestUniversalForwardingReceiver.callStatic.getData(
+      users[0].address
+    );
+    expect(value).to.equal(42);
   });
 });
