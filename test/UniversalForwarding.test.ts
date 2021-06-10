@@ -2,23 +2,20 @@ import {expect} from './chai-setup';
 import {ethers, deployments, getUnnamedAccounts} from 'hardhat';
 import {
   ForwarderRegistry,
-  NoStorageUniversalForwarder,
+  UniversalForwarder,
   TestUniversalForwardingReceiver__factory,
 } from '../typechain';
 import {setupUsers} from './utils';
 import {ForwarderRegistrySignerFactory} from './utils/eip712';
 
 const setup = deployments.createFixture(async () => {
-  await deployments.fixture([
-    'ForwarderRegistry',
-    'NoStorageUniversalForwarder',
-  ]);
+  await deployments.fixture(['ForwarderRegistry', 'UniversalForwarder']);
 
   const ForwarderRegistry = <ForwarderRegistry>(
     await ethers.getContract('ForwarderRegistry')
   );
-  const NoStorageUniversalForwarder = <NoStorageUniversalForwarder>(
-    await ethers.getContract('NoStorageUniversalForwarder')
+  const UniversalForwarder = <UniversalForwarder>(
+    await ethers.getContract('UniversalForwarder')
   );
   const TestUniversalForwardingReceiverFactory = <
     TestUniversalForwardingReceiver__factory
@@ -26,10 +23,10 @@ const setup = deployments.createFixture(async () => {
   const TestUniversalForwardingReceiver =
     await TestUniversalForwardingReceiverFactory.deploy(
       ForwarderRegistry.address,
-      NoStorageUniversalForwarder.address
+      UniversalForwarder.address
     );
   const contracts = {
-    NoStorageUniversalForwarder,
+    UniversalForwarder,
     ForwarderRegistry,
     TestUniversalForwardingReceiver,
   };

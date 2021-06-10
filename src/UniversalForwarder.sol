@@ -18,7 +18,7 @@ interface ERC1654 {
 /// It does not perform any extra logic apart from checing if the caller (metatx forwarder) has been approved via signature.
 /// Note that forwarder approval are forever. This is to remove the need to read storage. Signature need to be given each time.
 /// The overhead (on top of the specific metatx forwarder) is thus just an extra contract load and call + signature check.
-contract NoStorageUniversalForwarder is UsingAppendedCallDataAsSender, IERC2771 {
+contract UniversalForwarder is UsingAppendedCallDataAsSender, IERC2771 {
     using Address for address;
     using ECDSA for bytes32;
 

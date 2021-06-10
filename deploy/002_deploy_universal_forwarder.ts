@@ -7,11 +7,11 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   const {deployer} = await getNamedAccounts();
 
-  await deploy('NoStorageUniversalForwarder', {
+  await deploy('UniversalForwarder', {
     from: deployer,
     log: true,
     deterministicDeployment: true,
   });
 };
 export default func;
-func.tags = ['NoStorageUniversalForwarder'];
+func.tags = ['UniversalForwarder'];
