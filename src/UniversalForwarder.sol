@@ -4,7 +4,7 @@ pragma solidity 0.7.6;
 import "../_lib/openzeppelin/contracts/utils/Address.sol";
 import "../_lib/openzeppelin/contracts/cryptography/ECDSA.sol";
 import "./solc_0.7/ERC2771/IERC2771.sol";
-import "./solc_0.7/ERC2771/UsingAppendedCallDataAsSender.sol";
+import "./solc_0.7/ERC2771/UsingAppendedCallData.sol";
 
 interface ERC1271 {
     function isValidSignature(bytes calldata data, bytes calldata signature) external view returns (bytes4 magicValue);
@@ -18,7 +18,7 @@ interface ERC1654 {
 /// It does not perform any extra logic apart from checking if the caller (metatx forwarder) has been approved via signature.
 /// Note that forwarder approval are forever. This is to remove the need to read storage. Signature need to be given each time.
 /// The overhead (on top of the specific metatx forwarder) is thus just an extra contract load and call + signature check.
-contract UniversalForwarder is UsingAppendedCallDataAsSender, IERC2771 {
+contract UniversalForwarder is UsingAppendedCallData, IERC2771 {
     using Address for address;
     using ECDSA for bytes32;
 

@@ -18,6 +18,11 @@ contract TestUniversalForwardingReceiver is UsingUniversalForwarding {
         emit Test(from, name);
     }
 
+    receive() external payable {
+        address sender = _msgSender();
+        _d[sender] = 1;
+    }
+
     // solhint-disable-next-line no-complex-fallback
     fallback() external payable {
         address sender = _msgSender();

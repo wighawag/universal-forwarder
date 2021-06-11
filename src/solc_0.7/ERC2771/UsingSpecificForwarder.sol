@@ -2,9 +2,9 @@
 pragma solidity ^0.7.0;
 
 import "./IERC2771.sol";
-import "./UsingAppendedCallDataAsSender.sol";
+import "./UsingAppendedCallData.sol";
 
-abstract contract UsingSpecificForwarder is UsingAppendedCallDataAsSender, IERC2771 {
+abstract contract UsingSpecificForwarder is UsingAppendedCallData, IERC2771 {
     address internal immutable _forwarder;
 
     constructor(address forwarder) {
@@ -20,5 +20,12 @@ abstract contract UsingSpecificForwarder is UsingAppendedCallDataAsSender, IERC2
             return _appendedDataAsSender();
         }
         return msg.sender;
+    }
+
+    function _msgData() internal view returns (bytes calldata) {
+        if (msg.sender == _forwarder) {
+            return _msgDataAssuming20BytesAppendedData();
+        }
+        return msg.data;
     }
 }

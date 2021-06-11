@@ -4,7 +4,7 @@ pragma solidity 0.7.6;
 import "../_lib/openzeppelin/contracts/utils/Address.sol";
 import "../_lib/openzeppelin/contracts/cryptography/ECDSA.sol";
 import "./solc_0.7/ERC2771/IERC2771.sol";
-import "./solc_0.7/ERC2771/UsingAppendedCallDataAsSender.sol";
+import "./solc_0.7/ERC2771/UsingAppendedCallData.sol";
 
 interface ERC1271 {
     function isValidSignature(bytes calldata data, bytes calldata signature) external view returns (bytes4 magicValue);
@@ -16,7 +16,7 @@ interface ERC1654 {
 
 /// @notice Universal Meta Transaction Forwarder Registry.
 /// Users can record specific forwarder that will be allowed to forward meta transactions on their behalf.
-contract ForwarderRegistry is UsingAppendedCallDataAsSender, IERC2771 {
+contract ForwarderRegistry is UsingAppendedCallData, IERC2771 {
     using Address for address;
     using ECDSA for bytes32;
 

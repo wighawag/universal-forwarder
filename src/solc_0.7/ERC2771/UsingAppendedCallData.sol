@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.7.0;
 
-abstract contract UsingAppendedCallDataAsSender {
+abstract contract UsingAppendedCallData {
     function _appendedDataAsSender() internal pure returns (address payable sender) {
         // Copied from openzeppelin : https://github.com/OpenZeppelin/openzeppelin-contracts/blob/9d5f77db9da0604ce0b25148898a94ae2c20d70f/contracts/metatx/ERC2771Context.sol1
         // The assembly code is more direct than the Solidity version using `abi.decode`.
@@ -9,5 +9,9 @@ abstract contract UsingAppendedCallDataAsSender {
         assembly {
             sender := shr(96, calldataload(sub(calldatasize(), 20)))
         }
+    }
+
+    function _msgDataAssuming20BytesAppendedData() internal pure returns (bytes calldata) {
+        return msg.data[:msg.data.length - 20];
     }
 }

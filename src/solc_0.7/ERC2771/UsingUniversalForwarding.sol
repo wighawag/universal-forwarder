@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.7.0;
 
-import "./UsingAppendedCallDataAsSender.sol";
+import "./UsingAppendedCallData.sol";
 import "./IERC2771.sol";
 import "./IForwarderRegistry.sol";
 
-abstract contract UsingUniversalForwarding is UsingAppendedCallDataAsSender, IERC2771 {
+abstract contract UsingUniversalForwarding is UsingAppendedCallData, IERC2771 {
     IForwarderRegistry internal immutable _forwarderRegistry;
     address internal immutable _universalForwarder;
 
@@ -33,8 +33,24 @@ abstract contract UsingUniversalForwarding is UsingAppendedCallDataAsSender, IER
         // solhint-disable-next-line avoid-tx-origin
         if (msgSender != tx.origin && _forwarderRegistry.isForwarderFor(sender, msgSender)) {
             return sender;
-        } else {
-            return msgSender;
         }
+
+        return msgSender;
+    }
+
+    function _msgData() internal view returns (bytes calldata) {
+        address payable msgSender = msg.sender;
+        if (msgSender == address(_forwarderRegistry) || msgSender == _universalForwarder) {
+            // if forwarder use appended data
+            return _msgDataAssuming20BytesAppendedData();
+        }
+
+        address payable sender = _appendedDataAsSender();
+        // we check tx.origin to save gas in case where msg.sender == tx.origin
+        // solhint-disable-next-line avoid-tx-origin
+        if (msgSender != tx.origin && _forwarderRegistry.isForwarderFor(sender, msgSender)) {
+            return _msgDataAssuming20BytesAppendedData();
+        }
+        return msg.data;
     }
 }
