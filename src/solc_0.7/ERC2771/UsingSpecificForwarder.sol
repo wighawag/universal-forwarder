@@ -17,10 +17,7 @@ abstract contract UsingSpecificForwarder is UsingAppendedCallDataAsSender, IERC2
 
     function _msgSender() internal view returns (address payable result) {
         if (msg.sender == _forwarder) {
-            address payable sender = _appendedDataAsSender();
-            if (sender != address(0)) {
-                return sender;
-            }
+            return _appendedDataAsSender();
         }
         return msg.sender;
     }

@@ -70,6 +70,26 @@ describe('UniversalForwarding', function () {
     expect(data).to.equal(42);
   });
 
+  it('TestReceiver empty func with msg.sender', async function () {
+    const {users, TestUniversalForwardingReceiver} = await setup();
+    await users[0].TestUniversalForwardingReceiver.twelve();
+    const data = await TestUniversalForwardingReceiver.callStatic.getData(
+      users[0].address
+    );
+    expect(data).to.equal(12);
+  });
+
+  it('TestReceiver fallback with msg.sender', async function () {
+    const {users, TestUniversalForwardingReceiver} = await setup();
+    await users[0].signer.sendTransaction({
+      to: TestUniversalForwardingReceiver.address,
+    });
+    const data = await TestUniversalForwardingReceiver.callStatic.getData(
+      users[0].address
+    );
+    expect(data).to.equal(1);
+  });
+
   it('ForwarderRegistry metatx', async function () {
     const {
       users,
