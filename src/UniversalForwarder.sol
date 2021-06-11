@@ -58,7 +58,7 @@ contract UniversalForwarder is UsingAppendedCallData, IERC2771 {
         bytes calldata data
     ) external payable {
         address signer = _appendedDataAsSender();
-        require(_isValidSignature(signer, msg.sender, signature, signatureType), "SIGNATURE_INVALID");
+        _requireValidSignature(signer, msg.sender, signature, signatureType);
         target.functionCallWithValue(abi.encodePacked(data, signer), msg.value);
     }
 
@@ -98,12 +98,12 @@ contract UniversalForwarder is UsingAppendedCallData, IERC2771 {
         return abi.encodePacked("\x19\x01", _DOMAIN_SEPARATOR(), keccak256(abi.encode(APPROVAL_TYPEHASH, forwarder)));
     }
 
-    function _isValidSignature(
+    function _requireValidSignature(
         address signer,
         address forwarder,
         bytes memory signature,
         SignatureType signatureType
-    ) internal view returns (bool) {
+    ) internal view {
         bytes memory dataToHash = _encodeMessage(forwarder);
         if (signatureType == SignatureType.EIP1271) {
             require(
@@ -119,6 +119,5 @@ contract UniversalForwarder is UsingAppendedCallData, IERC2771 {
             address actualSigner = keccak256(dataToHash).recover(signature);
             require(signer == actualSigner, "SIGNATURE_WRONG_SIGNER");
         }
-        return signer == keccak256(dataToHash).recover(signature);
     }
 }

@@ -114,16 +114,13 @@ contract ForwarderRegistry is UsingAppendedCallData, IERC2771 {
     ) external payable {
         address signer = _appendedDataAsSender();
         address forwarder = msg.sender;
-        require(
-            _isValidSignature(
-                signer,
-                forwarder,
-                true,
-                uint256(_forwarders[signer][forwarder].nonce),
-                signature,
-                signatureType
-            ),
-            "SIGNATURE_INVALID"
+        _requireValidSignature(
+            signer,
+            forwarder,
+            true,
+            uint256(_forwarders[signer][forwarder].nonce),
+            signature,
+            signatureType
         );
         target.functionCallWithValue(abi.encodePacked(data, signer), msg.value);
     }
@@ -173,14 +170,14 @@ contract ForwarderRegistry is UsingAppendedCallData, IERC2771 {
             );
     }
 
-    function _isValidSignature(
+    function _requireValidSignature(
         address signer,
         address forwarder,
         bool approved,
         uint256 nonce,
         bytes memory signature,
         SignatureType signatureType
-    ) internal view returns (bool) {
+    ) internal view {
         bytes memory dataToHash = _encodeMessage(forwarder, approved, nonce);
         if (signatureType == SignatureType.EIP1271) {
             require(
@@ -196,7 +193,6 @@ contract ForwarderRegistry is UsingAppendedCallData, IERC2771 {
             address actualSigner = keccak256(dataToHash).recover(signature);
             require(signer == actualSigner, "SIGNATURE_WRONG_SIGNER");
         }
-        return signer == keccak256(dataToHash).recover(signature);
     }
 
     function _approveForwarder(
@@ -209,7 +205,7 @@ contract ForwarderRegistry is UsingAppendedCallData, IERC2771 {
         Forwarder storage forwarderData = _forwarders[signer][forwarder];
         uint256 nonce = uint256(forwarderData.nonce);
 
-        require(_isValidSignature(signer, forwarder, approved, nonce, signature, signatureType), "SIGNATURE_INVALID");
+        _requireValidSignature(signer, forwarder, approved, nonce, signature, signatureType);
 
         forwarderData.approved = approved;
         forwarderData.nonce = uint248(nonce + 1);
