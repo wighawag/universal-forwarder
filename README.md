@@ -1,4 +1,30 @@
-# Boilerplate for ethereum solidity smart contract development
+# INTRODUCTION
+
+This repository implements a generic EIP-2771 compliant forwarder that is fully future proof and universal.
+
+It actually comes with 2 different implementation, the UniversalForwarder and the ForwarderRegistry.
+
+# UniversalForwarder
+
+The UniversalForwarder is the most simple and generic forwarder possible. It requires zero storage read or write but approval are for eternity.
+
+It does that by requiring the caller / relayer to always provide a signature along the call.
+
+# ForwarderRegistry
+
+The ForwarderRegistry instead keep a record of approved forwarder for each user. It thus comes at a higher gas cost overall.
+
+Its advantages is that user are able to revoke approved forwarder if desired.
+
+# Usage
+
+The reposiroty is also a npm package [ethereum-universal-forwarder](https://www.npmjs.com/package/ethereum-universal-forwarder) and contains abstract contract you can import in your code to get started with these forwarders.
+
+If you use [hardhat-deploy](https://github.com/wighawag/hardhat-deploy), it also come with exported deploy script that you can use to have the contract available in your test or specific networks very easily.
+
+An example repo can be found here : https://github.com/wighawag/test-ethereum-universal-forwarder
+
+# DEVELOPMENT
 
 ## INSTALL
 
