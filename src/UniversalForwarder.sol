@@ -57,7 +57,7 @@ contract UniversalForwarder is UsingAppendedCallData, IERC2771 {
         address target,
         bytes calldata data
     ) external payable {
-        address signer = _appendedDataAsSender();
+        address signer = _lastAppendedDataAsSender();
         _requireValidSignature(signer, msg.sender, signature, signatureType);
         target.functionCallWithValue(abi.encodePacked(data, signer), msg.value);
     }

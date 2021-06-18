@@ -14,13 +14,13 @@ abstract contract UsingUniversalForwarding is UsingAppendedCallData, IERC2771 {
         _forwarderRegistry = forwarderRegistry;
     }
 
-    function isTrustedForwarder(address forwarder) external view override returns (bool) {
+    function isTrustedForwarder(address forwarder) external view virtual override returns (bool) {
         return forwarder == _universalForwarder || forwarder == address(_forwarderRegistry);
     }
 
-    function _msgSender() internal view returns (address payable) {
+    function _msgSender() internal view virtual returns (address payable) {
         address payable msgSender = msg.sender;
-        address payable sender = _appendedDataAsSender();
+        address payable sender = _lastAppendedDataAsSender();
         if (msgSender == address(_forwarderRegistry) || msgSender == _universalForwarder) {
             // if forwarder use appended data
             return sender;
@@ -38,7 +38,7 @@ abstract contract UsingUniversalForwarding is UsingAppendedCallData, IERC2771 {
         return msgSender;
     }
 
-    function _msgData() internal view returns (bytes calldata) {
+    function _msgData() internal view virtual returns (bytes calldata) {
         address payable msgSender = msg.sender;
         if (msgSender == address(_forwarderRegistry) || msgSender == _universalForwarder) {
             // if forwarder use appended data
@@ -47,7 +47,7 @@ abstract contract UsingUniversalForwarding is UsingAppendedCallData, IERC2771 {
 
         // we check tx.origin to save gas in case where msg.sender == tx.origin
         // solhint-disable-next-line avoid-tx-origin
-        if (msgSender != tx.origin && _forwarderRegistry.isForwarderFor(_appendedDataAsSender(), msgSender)) {
+        if (msgSender != tx.origin && _forwarderRegistry.isForwarderFor(_lastAppendedDataAsSender(), msgSender)) {
             return _msgDataAssuming20BytesAppendedData();
         }
         return msg.data;

@@ -11,18 +11,18 @@ abstract contract UsingSpecificForwarder is UsingAppendedCallData, IERC2771 {
         _forwarder = forwarder;
     }
 
-    function isTrustedForwarder(address forwarder) external view override returns (bool) {
+    function isTrustedForwarder(address forwarder) external view virtual override returns (bool) {
         return forwarder == _forwarder;
     }
 
-    function _msgSender() internal view returns (address payable result) {
+    function _msgSender() internal view virtual returns (address payable result) {
         if (msg.sender == _forwarder) {
-            return _appendedDataAsSender();
+            return _lastAppendedDataAsSender();
         }
         return msg.sender;
     }
 
-    function _msgData() internal view returns (bytes calldata) {
+    function _msgData() internal view virtual returns (bytes calldata) {
         if (msg.sender == _forwarder) {
             return _msgDataAssuming20BytesAppendedData();
         }

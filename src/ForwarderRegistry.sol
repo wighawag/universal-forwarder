@@ -59,7 +59,7 @@ contract ForwarderRegistry is UsingAppendedCallData, IERC2771 {
     /// @param target destination of the call (that will receive the meta transaction).
     /// @param data the content of the call (the signer address will be appended to it).
     function forward(address target, bytes calldata data) external payable {
-        address signer = _appendedDataAsSender();
+        address signer = _lastAppendedDataAsSender();
         require(_forwarders[signer][msg.sender].approved, "NOT_AUTHORIZED_FORWARDER");
         target.functionCallWithValue(abi.encodePacked(data, signer), msg.value);
     }
@@ -84,7 +84,7 @@ contract ForwarderRegistry is UsingAppendedCallData, IERC2771 {
         bytes calldata signature,
         SignatureType signatureType
     ) external {
-        _approveForwarder(_appendedDataAsSender(), approved, signature, signatureType);
+        _approveForwarder(_lastAppendedDataAsSender(), approved, signature, signatureType);
     }
 
     /// @notice approve and forward the meta transaction in one call.
@@ -97,7 +97,7 @@ contract ForwarderRegistry is UsingAppendedCallData, IERC2771 {
         address target,
         bytes calldata data
     ) external payable {
-        address signer = _appendedDataAsSender();
+        address signer = _lastAppendedDataAsSender();
         _approveForwarder(signer, true, signature, signatureType);
         target.functionCallWithValue(abi.encodePacked(data, signer), msg.value);
     }
@@ -112,7 +112,7 @@ contract ForwarderRegistry is UsingAppendedCallData, IERC2771 {
         address target,
         bytes calldata data
     ) external payable {
-        address signer = _appendedDataAsSender();
+        address signer = _lastAppendedDataAsSender();
         address forwarder = msg.sender;
         _requireValidSignature(
             signer,
