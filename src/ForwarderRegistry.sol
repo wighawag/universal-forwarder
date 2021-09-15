@@ -80,11 +80,12 @@ contract ForwarderRegistry is UsingAppendedCallData, IERC2771 {
     /// @param approved whether to approve or disapprove (if previously approved) the forwarder.
     /// @param signature signature by signer for approving forwarder.
     function approveForwarder(
+        address forwarderToChangeApproval,
         bool approved,
         bytes calldata signature,
         SignatureType signatureType
     ) external {
-        _approveForwarder(_lastAppendedDataAsSender(), approved, signature, signatureType);
+        _approveForwarder(_lastAppendedDataAsSender(), forwarderToChangeApproval, approved, signature, signatureType);
     }
 
     /// @notice approve and forward the meta transaction in one call.
@@ -98,7 +99,7 @@ contract ForwarderRegistry is UsingAppendedCallData, IERC2771 {
         bytes calldata data
     ) external payable {
         address signer = _lastAppendedDataAsSender();
-        _approveForwarder(signer, true, signature, signatureType);
+        _approveForwarder(signer, msg.sender, true, signature, signatureType);
         target.functionCallWithValue(abi.encodePacked(data, signer), msg.value);
     }
 
@@ -197,18 +198,18 @@ contract ForwarderRegistry is UsingAppendedCallData, IERC2771 {
 
     function _approveForwarder(
         address signer,
+        address forwarderToChangeApproval,
         bool approved,
         bytes memory signature,
         SignatureType signatureType
     ) internal {
-        address forwarder = msg.sender;
-        Forwarder storage forwarderData = _forwarders[signer][forwarder];
+        Forwarder storage forwarderData = _forwarders[signer][forwarderToChangeApproval];
         uint256 nonce = uint256(forwarderData.nonce);
 
-        _requireValidSignature(signer, forwarder, approved, nonce, signature, signatureType);
+        _requireValidSignature(signer, forwarderToChangeApproval, approved, nonce, signature, signatureType);
 
         forwarderData.approved = approved;
         forwarderData.nonce = uint248(nonce + 1);
-        emit ForwarderApproved(signer, forwarder, approved, nonce);
+        emit ForwarderApproved(signer, forwarderToChangeApproval, approved, nonce);
     }
 }
