@@ -76,7 +76,8 @@ contract ForwarderRegistry is UsingAppendedCallData, IERC2771 {
         return forwarder == address(this) || _forwarders[signer][forwarder].approved;
     }
 
-    /// @notice approve forwarder using the forwarder (which is msg.sender).
+    /// @notice approve a forwarder using EIP-2771 (msg.sender is a forwarder and signer is encoded in the appended data).
+    /// @param forwarderToChangeApproval address of the forwarder to approve
     /// @param approved whether to approve or disapprove (if previously approved) the forwarder.
     /// @param signature signature by signer for approving forwarder.
     function approveForwarder(
