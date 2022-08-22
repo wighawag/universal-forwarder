@@ -28,3 +28,4 @@ export/deploy/*
 !export/deploy/001_deploy_forwarder_registry.js
 !export/deploy/002_deploy_universal_forwarder.js
 
+private/

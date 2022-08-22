@@ -72,8 +72,8 @@ contract ForwarderRegistry is UsingAppendedCallData, IERC2771 {
     /// @notice return whether a forwarder is approved by a particular signer.
     /// @param signer signer who authorized or not the forwarder.
     /// @param forwarder meta transaction forwarder contract address.
-    function isForwarderFor(address signer, address forwarder) external view returns (bool) {
-        return forwarder == address(this) || _forwarders[signer][forwarder].approved;
+    function isApprovedForwarder(address signer, address forwarder) external view returns (bool) {
+        return _forwarders[signer][forwarder].approved;
     }
 
     /// @notice approve a forwarder using EIP-2771 (msg.sender is a forwarder and signer is encoded in the appended data).

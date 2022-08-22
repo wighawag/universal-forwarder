@@ -31,7 +31,7 @@ abstract contract UsingUniversalForwarding is UsingAppendedCallData, IERC2771 {
         // and check if the msg.sender was registered as forewarder for that address
         // we check tx.origin to save gas in case where msg.sender == tx.origin
         // solhint-disable-next-line avoid-tx-origin
-        if (msgSender != tx.origin && _forwarderRegistry.isForwarderFor(sender, msgSender)) {
+        if (msgSender != tx.origin && _forwarderRegistry.isApprovedForwarder(sender, msgSender)) {
             return sender;
         }
 
@@ -47,7 +47,7 @@ abstract contract UsingUniversalForwarding is UsingAppendedCallData, IERC2771 {
 
         // we check tx.origin to save gas in case where msg.sender == tx.origin
         // solhint-disable-next-line avoid-tx-origin
-        if (msgSender != tx.origin && _forwarderRegistry.isForwarderFor(_lastAppendedDataAsSender(), msgSender)) {
+        if (msgSender != tx.origin && _forwarderRegistry.isApprovedForwarder(_lastAppendedDataAsSender(), msgSender)) {
             return _msgDataAssuming20BytesAppendedData();
         }
         return msg.data;
