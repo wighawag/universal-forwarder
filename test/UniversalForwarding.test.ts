@@ -113,7 +113,7 @@ describe('UniversalForwarding', function () {
     const {data: relayerData} =
       await users[1].ForwarderRegistry.populateTransaction.checkApprovalAndForward(
         signature,
-        0,
+        false,
         to,
         data
       );
@@ -152,7 +152,7 @@ describe('UniversalForwarding', function () {
     const {data: relayerData} =
       await users[1].UniversalForwarder.populateTransaction.forward(
         signature,
-        0,
+        false,
         to,
         data
       );

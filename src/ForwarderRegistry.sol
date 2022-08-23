@@ -7,10 +7,6 @@ import "./solc_0.7/ERC2771/IERC2771.sol";
 import "./solc_0.7/ERC2771/UsingAppendedCallData.sol";
 
 interface ERC1271 {
-    function isValidSignature(bytes calldata data, bytes calldata signature) external view returns (bytes4 magicValue);
-}
-
-interface ERC1654 {
     function isValidSignature(bytes32 hash, bytes calldata signature) external view returns (bytes4 magicValue);
 }
 
@@ -20,9 +16,7 @@ contract ForwarderRegistry is UsingAppendedCallData, IERC2771 {
     using Address for address;
     using ECDSA for bytes32;
 
-    enum SignatureType {DIRECT, EIP1654, EIP1271}
-    bytes4 internal constant ERC1271_MAGICVALUE = 0x20c13b0b;
-    bytes4 internal constant ERC1654_MAGICVALUE = 0x1626ba7e;
+    bytes4 internal constant ERC1271_MAGICVALUE = 0x1626ba7e;
 
     bytes32 internal constant EIP712DOMAIN_NAME = keccak256("ForwarderRegistry");
     bytes32 internal constant APPROVAL_TYPEHASH =
@@ -80,37 +74,46 @@ contract ForwarderRegistry is UsingAppendedCallData, IERC2771 {
     /// @param forwarderToChangeApproval address of the forwarder to approve
     /// @param approved whether to approve or disapprove (if previously approved) the forwarder.
     /// @param signature signature by signer for approving forwarder.
+    /// @param isEIP1271Signature true if the signer is a contract that require authorization via EIP-1271
     function approveForwarder(
         address forwarderToChangeApproval,
         bool approved,
         bytes calldata signature,
-        SignatureType signatureType
+        bool isEIP1271Signature
     ) external {
-        _approveForwarder(_lastAppendedDataAsSender(), forwarderToChangeApproval, approved, signature, signatureType);
+        _approveForwarder(
+            _lastAppendedDataAsSender(),
+            forwarderToChangeApproval,
+            approved,
+            signature,
+            isEIP1271Signature
+        );
     }
 
     /// @notice approve and forward the meta transaction in one call.
     /// @param signature signature by signer for approving forwarder.
+    /// @param isEIP1271Signature true if the signer is a contract that require authorization via EIP-1271
     /// @param target destination of the call (that will receive the meta transaction).
     /// @param data the content of the call (the signer address will be appended to it).
     function approveAndForward(
         bytes calldata signature,
-        SignatureType signatureType,
+        bool isEIP1271Signature,
         address target,
         bytes calldata data
     ) external payable {
         address signer = _lastAppendedDataAsSender();
-        _approveForwarder(signer, msg.sender, true, signature, signatureType);
+        _approveForwarder(signer, msg.sender, true, signature, isEIP1271Signature);
         target.functionCallWithValue(abi.encodePacked(data, signer), msg.value);
     }
 
     /// @notice check approval (but do not record it) and forward the meta transaction in one call.
     /// @param signature signature by signer for approving forwarder.
+    /// @param isEIP1271Signature true if the signer is a contract that require authorization via EIP-1271
     /// @param target destination of the call (that will receive the meta transaction).
     /// @param data the content of the call (the signer address will be appended to it).
     function checkApprovalAndForward(
         bytes calldata signature,
-        SignatureType signatureType,
+        bool isEIP1271Signature,
         address target,
         bytes calldata data
     ) external payable {
@@ -122,7 +125,7 @@ contract ForwarderRegistry is UsingAppendedCallData, IERC2771 {
             true,
             uint256(_forwarders[signer][forwarder].nonce),
             signature,
-            signatureType
+            isEIP1271Signature
         );
         target.functionCallWithValue(abi.encodePacked(data, signer), msg.value);
     }
@@ -178,18 +181,13 @@ contract ForwarderRegistry is UsingAppendedCallData, IERC2771 {
         bool approved,
         uint256 nonce,
         bytes memory signature,
-        SignatureType signatureType
+        bool isEIP1271Signature
     ) internal view {
         bytes memory dataToHash = _encodeMessage(forwarder, approved, nonce);
-        if (signatureType == SignatureType.EIP1271) {
+        if (isEIP1271Signature) {
             require(
-                ERC1271(signer).isValidSignature(dataToHash, signature) == ERC1271_MAGICVALUE,
+                ERC1271(signer).isValidSignature(keccak256(dataToHash), signature) == ERC1271_MAGICVALUE,
                 "SIGNATURE_1271_INVALID"
-            );
-        } else if (signatureType == SignatureType.EIP1654) {
-            require(
-                ERC1654(signer).isValidSignature(keccak256(dataToHash), signature) == ERC1654_MAGICVALUE,
-                "SIGNATURE_1654_INVALID"
             );
         } else {
             address actualSigner = keccak256(dataToHash).recover(signature);
@@ -202,12 +200,12 @@ contract ForwarderRegistry is UsingAppendedCallData, IERC2771 {
         address forwarderToChangeApproval,
         bool approved,
         bytes memory signature,
-        SignatureType signatureType
+        bool isEIP1271Signature
     ) internal {
         Forwarder storage forwarderData = _forwarders[signer][forwarderToChangeApproval];
         uint256 nonce = uint256(forwarderData.nonce);
 
-        _requireValidSignature(signer, forwarderToChangeApproval, approved, nonce, signature, signatureType);
+        _requireValidSignature(signer, forwarderToChangeApproval, approved, nonce, signature, isEIP1271Signature);
 
         forwarderData.approved = approved;
         forwarderData.nonce = uint248(nonce + 1);
