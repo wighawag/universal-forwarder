@@ -72,7 +72,7 @@ contract UniversalForwarder is UsingAppendedCallData, IERC2771 {
             chainId := chainid()
         }
 
-        // in case a fork happen, to support the chain that had to change its chainId,, we compue the domain operator
+        // in case a fork happen, to support the chain that had to change its chainId, we compue the domain operator
         return chainId == _deploymentChainId ? _deploymentDomainSeparator : _calculateDomainSeparator(chainId);
     }
 
