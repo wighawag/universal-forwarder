@@ -18,7 +18,7 @@ contract ForwarderRegistry is UsingAppendedCallData, IERC2771 {
 
     bytes4 internal constant ERC1271_MAGICVALUE = 0x1626ba7e;
 
-    bytes32 internal constant EIP712DOMAIN_NAME = keccak256("ForwarderRegistry");
+    bytes32 internal constant EIP712_DOMAIN_NAME = keccak256("ForwarderRegistry");
     bytes32 internal constant APPROVAL_TYPEHASH =
         keccak256("ApproveForwarder(address forwarder,bool approved,uint256 nonce)");
 
@@ -155,7 +155,7 @@ contract ForwarderRegistry is UsingAppendedCallData, IERC2771 {
             keccak256(
                 abi.encode(
                     keccak256("EIP712Domain(string name,uint256 chainId,address verifyingContract)"),
-                    EIP712DOMAIN_NAME,
+                    EIP712_DOMAIN_NAME,
                     chainId,
                     address(this)
                 )
