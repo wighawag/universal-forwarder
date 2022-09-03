@@ -14,4 +14,7 @@ function copyFromDefault(p) {
 );
 
 fs.emptyDirSync('_lib/openzeppelin');
-fs.copySync('node_modules/@openzeppelin', '_lib/openzeppelin');
+fs.copySync('node_modules/@openzeppelin', '_lib/openzeppelin', {
+  recursive: true,
+  dereference: true,
+});
