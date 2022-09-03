@@ -5,6 +5,7 @@ import "../_lib/openzeppelin/contracts/utils/Address.sol";
 import "../_lib/openzeppelin/contracts/cryptography/ECDSA.sol";
 import "./solc_0.7/ERC2771/IERC2771.sol";
 import "./solc_0.7/ERC2771/UsingAppendedCallData.sol";
+import "./solc_0.7/ERC2771/IForwarderRegistry.sol";
 
 interface ERC1271 {
     function isValidSignature(bytes32 hash, bytes calldata signature) external view returns (bytes4 magicValue);
@@ -12,7 +13,7 @@ interface ERC1271 {
 
 /// @notice Universal Meta Transaction Forwarder Registry.
 /// Users can record specific forwarder that will be allowed to forward meta transactions on their behalf.
-contract ForwarderRegistry is UsingAppendedCallData, IERC2771 {
+contract ForwarderRegistry is IForwarderRegistry, UsingAppendedCallData, IERC2771 {
     using Address for address;
     using ECDSA for bytes32;
 
@@ -68,7 +69,7 @@ contract ForwarderRegistry is UsingAppendedCallData, IERC2771 {
     /// @notice return whether a forwarder is approved by a particular signer.
     /// @param signer signer who authorized or not the forwarder.
     /// @param forwarder meta transaction forwarder contract address.
-    function isApprovedForwarder(address signer, address forwarder) external view returns (bool) {
+    function isApprovedForwarder(address signer, address forwarder) external view override returns (bool) {
         return _forwarders[signer][forwarder].approved;
     }
 
