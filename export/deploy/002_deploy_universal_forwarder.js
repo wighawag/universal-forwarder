@@ -50,7 +50,7 @@ var func = function (hre) {
                     return [4 /*yield*/, deploy('UniversalForwarder', {
                             from: deployer,
                             log: true,
-                            deterministicDeployment: true,
+                            deterministicDeployment: true
                         })];
                 case 2:
                     _a.sent();
