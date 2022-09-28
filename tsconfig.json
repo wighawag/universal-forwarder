@@ -6,6 +6,7 @@
     "esModuleInterop": true,
     "moduleResolution": "node",
     "forceConsistentCasingInFileNames": true,
+    "downlevelIteration": true,
     "outDir": "dist"
   },
   "include": [
@@ -13,6 +14,7 @@
     "./scripts",
     "./deploy",
     "./test",
+    "./utils",
     "typechain/**/*"
   ]
 }
