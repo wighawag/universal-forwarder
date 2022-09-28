@@ -21,7 +21,7 @@ contract UniversalForwarder is UsingAppendedCallData, IERC2771 {
     bytes4 internal constant ERC1271_MAGICVALUE = 0x1626ba7e;
 
     bytes32 internal constant EIP712_DOMAIN_NAME = keccak256("UniversalForwarder");
-    bytes32 internal constant APPROVAL_TYPEHASH = keccak256("ApproveForwarderForever(address forwarder)");
+    bytes32 internal constant APPROVAL_TYPEHASH = keccak256("ApproveForwarderForever(address signer,address forwarder)");
 
     uint256 private immutable _deploymentChainId;
     bytes32 private immutable _deploymentDomainSeparator;
@@ -89,8 +89,8 @@ contract UniversalForwarder is UsingAppendedCallData, IERC2771 {
             );
     }
 
-    function _encodeMessage(address forwarder) internal view returns (bytes memory) {
-        return abi.encodePacked("\x19\x01", _DOMAIN_SEPARATOR(), keccak256(abi.encode(APPROVAL_TYPEHASH, forwarder)));
+    function _encodeMessage(address signer, address forwarder) internal view returns (bytes memory) {
+        return abi.encodePacked("\x19\x01", _DOMAIN_SEPARATOR(), keccak256(abi.encode(APPROVAL_TYPEHASH, signer, forwarder)));
     }
 
     function _requireValidSignature(
@@ -99,7 +99,7 @@ contract UniversalForwarder is UsingAppendedCallData, IERC2771 {
         bytes memory signature,
         bool isEIP1271Signature
     ) internal view {
-        bytes memory dataToHash = _encodeMessage(forwarder);
+        bytes memory dataToHash = _encodeMessage(signer, forwarder);
         if (isEIP1271Signature) {
             require(
                 ERC1271(signer).isValidSignature(keccak256(dataToHash), signature) == ERC1271_MAGICVALUE,

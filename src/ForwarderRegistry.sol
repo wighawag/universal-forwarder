@@ -21,7 +21,7 @@ contract ForwarderRegistry is IForwarderRegistry, UsingAppendedCallData, IERC277
 
     bytes32 internal constant EIP712_DOMAIN_NAME = keccak256("ForwarderRegistry");
     bytes32 internal constant APPROVAL_TYPEHASH =
-        keccak256("ApproveForwarder(address forwarder,bool approved,uint256 nonce)");
+        keccak256("ApproveForwarder(address signer,address forwarder,bool approved,uint256 nonce)");
 
     uint256 private immutable _deploymentChainId;
     bytes32 private immutable _deploymentDomainSeparator;
@@ -166,6 +166,7 @@ contract ForwarderRegistry is IForwarderRegistry, UsingAppendedCallData, IERC277
     }
 
     function _encodeMessage(
+        address signer,
         address forwarder,
         bool approved,
         uint256 nonce
@@ -174,7 +175,7 @@ contract ForwarderRegistry is IForwarderRegistry, UsingAppendedCallData, IERC277
             abi.encodePacked(
                 "\x19\x01",
                 _DOMAIN_SEPARATOR(),
-                keccak256(abi.encode(APPROVAL_TYPEHASH, forwarder, approved, nonce))
+                keccak256(abi.encode(APPROVAL_TYPEHASH, signer, forwarder, approved, nonce))
             );
     }
 
@@ -186,7 +187,7 @@ contract ForwarderRegistry is IForwarderRegistry, UsingAppendedCallData, IERC277
         bytes memory signature,
         bool isEIP1271Signature
     ) internal view {
-        bytes memory dataToHash = _encodeMessage(forwarder, approved, nonce);
+        bytes memory dataToHash = _encodeMessage(signer, forwarder, approved, nonce);
         if (isEIP1271Signature) {
             require(
                 ERC1271(signer).isValidSignature(keccak256(dataToHash), signature) == ERC1271_MAGICVALUE,

@@ -69,6 +69,7 @@ describe('SpecificForwarder', function () {
       throw new Error(`cannot populate transaction`);
     }
     const signature = await ForwarderRegistrySigner.sign(users[0], {
+      signer: users[0].address,
       forwarder: users[1].address,
       approved: true,
       nonce: 0,

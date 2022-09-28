@@ -8,6 +8,10 @@ export const ForwarderRegistrySignerFactory = new EIP712SignerFactory(
   {
     ApproveForwarder: [
       {
+        name: 'signer',
+        type: 'address',
+      },
+      {
         name: 'forwarder',
         type: 'address',
       },
@@ -30,6 +34,10 @@ export const UniversalForwarderSignerFactory = new EIP712SignerFactory(
   },
   {
     ApproveForwarderForever: [
+      {
+        name: 'signer',
+        type: 'address',
+      },
       {
         name: 'forwarder',
         type: 'address',

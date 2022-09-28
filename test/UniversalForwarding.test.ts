@@ -105,6 +105,7 @@ describe('UniversalForwarding', function () {
       throw new Error(`cannot populate transaction`);
     }
     const signature = await ForwarderRegistrySigner.sign(users[0], {
+      signer: users[0].address,
       forwarder: users[1].address,
       approved: true,
       nonce: 0,
@@ -144,9 +145,8 @@ describe('UniversalForwarding', function () {
       throw new Error(`cannot populate transaction`);
     }
     const signature = await UniversalForwarderSigner.sign(users[0], {
+      signer: users[0].address,
       forwarder: users[1].address,
-      approved: true,
-      nonce: 0,
     });
 
     const {data: relayerData} =
