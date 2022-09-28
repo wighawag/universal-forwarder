@@ -1,6 +1,6 @@
 {
 	"name": "ethereum-universal-forwarder",
-	"version": "1.0.0",
+	"version": "2.0.0-beta",
 	"description": "Universale Forwarder for Meta Transactions",
 	"engines": {
 		"node": ">= 12.18.0"
